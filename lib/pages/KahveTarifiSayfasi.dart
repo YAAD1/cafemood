@@ -1,7 +1,7 @@
-import 'package:coffee/pages/FavoriTarifler.dart';
 import 'package:coffee/pages/sicak_soguk.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:coffee/pages/FavoriTarifler.dart';
 
 class KahveTarifiSayfasi extends StatefulWidget {
   final KahveTarifi kahveTarifi;
@@ -13,12 +13,16 @@ class KahveTarifiSayfasi extends StatefulWidget {
 }
 
 class _KahveTarifiSayfasiState extends State<KahveTarifiSayfasi> {
-  bool favorited = false; // Favori durumu
+  bool favorited = false;
+
+  @override
+  void initState() {
+    super.initState();
+    favorited = FavoriTarifler.favoriMi(widget.kahveTarifi);
+  }
 
   @override
   Widget build(BuildContext context) {
-    favorited = FavoriTarifler.favoriMi(widget.kahveTarifi);
-
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 194, 155, 108),
       appBar: AppBar(
@@ -28,11 +32,12 @@ class _KahveTarifiSayfasiState extends State<KahveTarifiSayfasi> {
           IconButton(
             icon: Icon(
               favorited ? Icons.favorite : Icons.favorite_border,
-              color:
-                  favorited ? const Color.fromARGB(255, 194, 155, 108) : null,
+              color: favorited
+                  ? const Color.fromARGB(255, 194, 155, 108)
+                  : null, // Değişiklik burada
             ),
             onPressed: () {
-              _toggleFavorite();
+              _toggleFavorite(context);
             },
           ),
         ],
@@ -44,7 +49,6 @@ class _KahveTarifiSayfasiState extends State<KahveTarifiSayfasi> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Üst kısım: Resim
                 ClipRRect(
                   child: Image.asset(
                     widget.kahveTarifi.resimPath,
@@ -54,24 +58,56 @@ class _KahveTarifiSayfasiState extends State<KahveTarifiSayfasi> {
                   ),
                 ),
                 SizedBox(height: 16.0),
-                // Orta kısım: Başlık
                 Text(
                   widget.kahveTarifi.tarifAdi,
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 16.0),
-                // Alt kısım: Açıklama
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    widget.kahveTarifi.tarifIcerik,
-                    style: TextStyle(fontSize: 18),
-                    textAlign: TextAlign.justify,
-                  ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Text(
+                        'Malzemeler',
+                        style: TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        widget.kahveTarifi.tarifMalzemeler,
+                        style: TextStyle(fontSize: 18),
+                        textAlign: TextAlign.justify,
+                      ),
+                    ),
+                  ],
                 ),
                 SizedBox(height: 16.0),
-                // Alt kısım: URL Bağlantısı
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Text(
+                        'Hazırlanış',
+                        style: TextStyle(
+                            fontSize: 22, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    SizedBox(height: 8.0),
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        widget.kahveTarifi.tarifHazirlanis,
+                        style: TextStyle(fontSize: 18),
+                        textAlign: TextAlign.justify,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 16.0),
                 ButtonBar(
                   alignment: MainAxisAlignment.center,
                   children: [
@@ -102,15 +138,24 @@ class _KahveTarifiSayfasiState extends State<KahveTarifiSayfasi> {
     }
   }
 
-  void _toggleFavorite() {
+  void _toggleFavorite(BuildContext context) {
     setState(() {
-      bool favorited = FavoriTarifler.favoriMi(widget.kahveTarifi);
+      favorited = !favorited;
 
       if (favorited) {
-        FavoriTarifler.cikar(widget.kahveTarifi);
-      } else {
         FavoriTarifler.ekle(widget.kahveTarifi);
+      } else {
+        FavoriTarifler.cikar(widget.kahveTarifi);
       }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            favorited ? 'Favorilere eklendi' : 'Favorilerden kaldırıldı',
+          ),
+          duration: Duration(seconds: 1), // Belirme süresi
+        ),
+      );
     });
   }
 }
